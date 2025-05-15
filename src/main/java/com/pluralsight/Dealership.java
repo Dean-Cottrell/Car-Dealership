@@ -24,6 +24,7 @@ public class Dealership {
     public List<Vehicle> getAllVehicles() {
         return inventory;
     }
+
     public void removeVehicle(int id) {
         for (int i = 0; i < inventory.size(); i++) {
             Vehicle vehicle = inventory.get(i);

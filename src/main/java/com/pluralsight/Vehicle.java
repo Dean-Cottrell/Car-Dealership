@@ -22,6 +22,14 @@ public class Vehicle {
             this.price = price;
         }
 
+    public int getVin() {
+        return vin;
+    }
+
+    public void setVin(int vin) {
+        this.vin = vin;
+    }
+
     public int getYear() {
         return year;
     }
@@ -36,14 +44,6 @@ public class Vehicle {
 
     public void setMake(String make) {
         this.make = make;
-    }
-
-    public int getVin() {
-        return vin;
-    }
-
-    public void setVin(int vin) {
-        this.vin = vin;
     }
 
     public String getModel() {
