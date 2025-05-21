@@ -5,138 +5,185 @@ import java.util.Scanner;
 
 public class UserInterface {
     private Dealership dealership;
+    private DealershipFileManager dealershipFileManager;
+    private ContractFileManager contractFileManager;
 
     public UserInterface() {
+        dealershipFileManager = new DealershipFileManager("inventory.csv");
+        contractFileManager = new ContractFileManager();
+        init();
+    }
+
+    private void init() {
+        dealership = dealershipFileManager.getDealership();
+        if (dealership == null) {
+            System.out.println("No dealership data found; creating default dealership.");
+            dealership = new Dealership("Default Dealership", "Unknown Address", "000-000-0000");
+        } else {
+            System.out.println("Loaded Dealership: " + dealership.getName());
+        }
     }
 
     public void display() {
-        init();
         Scanner scanner = new Scanner(System.in);
-        int choice = 0;
+        int choice;
         do {
             displayMenu();
-
             try {
                 choice = Integer.parseInt(scanner.nextLine());
             } catch (NumberFormatException e) {
                 choice = -1;
             }
-            processUserChoice(choice);
-        } while (choice != 00);
+            processChoice(choice, scanner);
+        } while (choice != 99);
         scanner.close();
-    }
-
-    private void init() {
-        DealershipFileManager fileManager = new DealershipFileManager();
-        dealership = fileManager.getDealership();
-        if (dealership != null) {
-            System.out.println("Dealership loaded successfully: " + dealership.getName());
-        } else {
-            System.out.println("Failed to load dealership data.");
-        }
     }
 
     private void displayMenu() {
         System.out.println("\n--- Car Dealership Menu ---");
         System.out.println("1  - Find vehicles within a price range");
-        System.out.println("2  - Find vehicles by make and model");
+        System.out.println("2  - Find vehicles by make/model");
         System.out.println("3  - Find vehicles by year range");
         System.out.println("4  - Find vehicles by color");
         System.out.println("5  - Find vehicles by mileage range");
-        System.out.println("6  - Find vehicles by type (car, truck, SUV, van)");
+        System.out.println("6  - Find vehicles by type");
         System.out.println("7  - List ALL vehicles");
         System.out.println("8  - Add a vehicle");
         System.out.println("9  - Remove a vehicle");
-        System.out.println("00 - Quit");
+        System.out.println("10 - Sell/Lease a Vehicle");
+        System.out.println("99 - Quit");
         System.out.print("Enter your choice: ");
     }
 
-    private void processUserChoice(int choice) {
+    private void processChoice(int choice, Scanner scanner) {
         switch (choice) {
             case 1:
-                processGetByPriceRequest();
-                break;
             case 2:
-                processGetByMakeModelRequest();
-                break;
             case 3:
-                processGetByYearRequest();
-                break;
             case 4:
-                processGetByColorRequest();
-                break;
             case 5:
-                processGetByMileageRequest();
-                break;
             case 6:
-                processGetByVehicleTypeRequest();
+                System.out.println("Search functionality not implemented yet.");
                 break;
             case 7:
-                processGetAllVehiclesRequest();
+                listAllVehicles();
                 break;
             case 8:
-                processAddVehicleRequest();
+                addVehicle(scanner);
                 break;
             case 9:
-                processRemoveVehicleRequest();
+                removeVehicle(scanner);
                 break;
-            case 00:
-                System.out.println("Goodbye!");
+            case 10:
+                processSellLeaseRequest(scanner);
+                break;
+            case 99:
+                System.out.println("Goodbye.");
                 break;
             default:
-                System.out.println("Invalid option, please try again.");
+                System.out.println("Invalid option; try again.");
         }
     }
 
-    private void processGetByPriceRequest() {
-        System.out.println("Search by price range selected.");
-    }
-
-    private void processGetByMakeModelRequest() {
-        System.out.println("Search by make/model selected.");
-    }
-
-    private void processGetByYearRequest() {
-        System.out.println("Search by year range selected.");
-    }
-
-    private void processGetByColorRequest() {
-        System.out.println("Search by color selected.");
-    }
-
-    private void processGetByMileageRequest() {
-        System.out.println("Search by mileage range selected.");
-    }
-
-    private void processGetByVehicleTypeRequest() {
-        System.out.println("Search by vehicle type selected.");
-    }
-
-    private void processGetAllVehiclesRequest() {List<Vehicle> vehicles = dealership.getAllVehicles();
-        displayVehicles(vehicles);
-    }
-
-    private void processAddVehicleRequest() {
-        System.out.println("Add a vehicle selected.");
-    }
-
-    private void processRemoveVehicleRequest() {
-        System.out.println("Remove a vehicle selected.");
-    }
-
-    private void displayVehicles(List<Vehicle> vehicles) {
+    private void listAllVehicles() {
+        List<Vehicle> vehicles = dealership.getAllVehicles();
         if (vehicles.isEmpty()) {
-            System.out.println("No vehicles found.");
+            System.out.println("No vehicles in inventory.");
+        } else {
+            for (Vehicle v : vehicles) {
+                System.out.println(v);
+            }
+        }
+    }
+
+    private void addVehicle(Scanner scanner) {
+        try {
+            System.out.print("Enter VIN: ");
+            int vin = Integer.parseInt(scanner.nextLine());
+            System.out.print("Enter Year: ");
+            int year = Integer.parseInt(scanner.nextLine());
+            System.out.print("Enter Make: ");
+            String make = scanner.nextLine();
+            System.out.print("Enter Model: ");
+            String model = scanner.nextLine();
+            System.out.print("Enter Vehicle Type: ");
+            String type = scanner.nextLine();
+            System.out.print("Enter Color: ");
+            String color = scanner.nextLine();
+            System.out.print("Enter Odometer reading: ");
+            int odometer = Integer.parseInt(scanner.nextLine());
+            System.out.print("Enter Price: ");
+            double price = Double.parseDouble(scanner.nextLine());
+
+            Vehicle vehicle = new Vehicle(vin, year, make, model, type, color, odometer, price);
+            dealership.addVehicle(vehicle);
+            dealershipFileManager.saveDealership(dealership);
+            System.out.println("Vehicle added.");
+        } catch (Exception e) {
+            System.out.println("Error adding vehicle: " + e.getMessage());
+        }
+    }
+
+    private void removeVehicle(Scanner scanner) {
+        System.out.print("Enter VIN of the vehicle to remove: ");
+        int vin = Integer.parseInt(scanner.nextLine());
+
+        boolean removed = dealership.removeVehicle(vin);
+        if (removed) {
+            dealershipFileManager.saveDealership(dealership);
+            System.out.println("Vehicle removed.");
+        } else {
+            System.out.println("Vehicle not found.");
+        }
+    }
+
+    private void processSellLeaseRequest(Scanner scanner) {
+        System.out.print("Enter VIN of the vehicle for sale/lease: ");
+        int vin = Integer.parseInt(scanner.nextLine());
+
+        Vehicle selectedVehicle = null;
+        for (Vehicle v : dealership.getAllVehicles()) {
+            if (v.getVin() == vin) {
+                selectedVehicle = v;
+                break;
+            }
+        }
+
+        if (selectedVehicle == null) {
+            System.out.println("Vehicle with VIN " + vin + " not found.");
             return;
         }
 
-        System.out.printf("%-10s %-6s %-15s %-15s %-10s %-10s %-10s %n",
-                "VIN", "Year", "Make", "Model", "Type", "Color", "Price");
-        System.out.println("--------------------------------------------------------------------------");
-        for (Vehicle v : vehicles) {
-            System.out.printf("%-10d %-6d %-15s %-15s %-10s %-10s $%-10.2f %n",
-                    v.getVin(), v.getYear(), v.getMake(), v.getModel(),
-                    v.getVehicleType(), v.getColor(), v.getPrice());
+        System.out.print("Enter contract date (YYYYMMDD): ");
+        String date = scanner.nextLine();
+        System.out.print("Enter customer's name: ");
+        String customerName = scanner.nextLine();
+        System.out.print("Enter customer's email: ");
+        String customerEmail = scanner.nextLine();
+        System.out.print("Enter contract type (SALE/LEASE): ");
+        String contractType = scanner.nextLine().trim();
+
+        Contract contract = null;
+        if (contractType.equalsIgnoreCase("SALE")) {
+            System.out.print("Do they want to finance the purchase? (YES/NO): ");
+            String financeResponse = scanner.nextLine().trim();
+            boolean financed = financeResponse.equalsIgnoreCase("YES");
+            contract = new SalesContract(date, customerName, customerEmail, selectedVehicle, financed);
+        } else if (contractType.equalsIgnoreCase("LEASE")) {
+            int currentYear = java.time.Year.now().getValue();
+            if ((currentYear - selectedVehicle.getYear()) > 3) {
+                System.out.println("Cannot lease a vehicle that is more than 3 years old.");
+                return;
+            }
+            contract = new LeaseContract(date, customerName, customerEmail, selectedVehicle);
+        } else {
+            System.out.println("Invalid contract type entered.");
+            return;
         }
+
+        contractFileManager.saveContract(contract);
+        dealership.removeVehicle(selectedVehicle.getVin());
+        dealershipFileManager.saveDealership(dealership);
+        System.out.println("Contract processed and vehicle removed from inventory.");
     }
 }
